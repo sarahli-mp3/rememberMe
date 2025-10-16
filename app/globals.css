@@ -158,24 +158,31 @@ body {
 }
 .turn {
   position: absolute;
-  right: 0;
+  left: 50%;
   top: 0;
   bottom: 0;
-  width: 50%;
+  width: 25%;
+  transform: translateX(-50%);
   transform-style: preserve-3d;
   transform-origin: left center;
   animation: none;
   z-index: 10;
   perspective: 1000px;
 }
-.turn.next {
-  animation: flipNext 1.2s cubic-bezier(0.25, 0.8, 0.3, 1) both;
-}
-.turn.prev {
+.turn-next {
   left: 0;
   right: auto;
+  width: 50%;
+  transform: none;
+  transform-origin: 0% center;
+  animation: flipNext 0.5s cubic-bezier(0.25, 0.8, 0.3, 1) both;
+}
+.turn-prev {
+  left: 0;
+  right: 50%;
+  transform: none;
   transform-origin: right center;
-  animation: flipPrev 1.2s cubic-bezier(0.25, 0.8, 0.3, 1) both;
+  animation: flipPrev 0.5s cubic-bezier(0.25, 0.8, 0.3, 1) both;
 }
 .turn-face {
   position: absolute;
@@ -264,25 +271,20 @@ body {
     transform: rotateY(0deg) translateZ(0px);
     box-shadow: 0 18px 40px var(--shadow);
   }
-  20% {
-    transform: rotateY(-30deg) translateZ(15px);
-    box-shadow: 0 35px 70px rgba(0, 0, 0, 0.3), -25px 0 50px rgba(0, 0, 0, 0.25);
+  25% {
+    transform: rotateY(-25deg) translateZ(15px);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3), -15px 0 30px rgba(0, 0, 0, 0.2);
   }
-  40% {
-    transform: rotateY(-60deg) translateZ(25px);
-    box-shadow: 0 45px 90px rgba(0, 0, 0, 0.4), -40px 0 70px rgba(0, 0, 0, 0.3);
+  50% {
+    transform: rotateY(-50deg) translateZ(20px);
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4), -25px 0 40px rgba(0, 0, 0, 0.25);
   }
-  60% {
-    transform: rotateY(-90deg) translateZ(30px);
-    box-shadow: 0 50px 100px rgba(0, 0, 0, 0.5),
-      -50px 0 80px rgba(0, 0, 0, 0.35);
-  }
-  80% {
-    transform: rotateY(-120deg) translateZ(20px);
-    box-shadow: 0 40px 80px rgba(0, 0, 0, 0.4), -35px 0 60px rgba(0, 0, 0, 0.3);
+  75% {
+    transform: rotateY(-75deg) translateZ(15px);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3), -15px 0 30px rgba(0, 0, 0, 0.2);
   }
   100% {
-    transform: rotateY(-180deg) translateZ(0px);
+    transform: rotateY(-90deg) translateZ(0px);
     box-shadow: 0 18px 40px var(--shadow);
   }
 }
@@ -291,24 +293,42 @@ body {
     transform: rotateY(180deg) translateZ(0px);
     box-shadow: 0 18px 40px var(--shadow);
   }
-  20% {
-    transform: rotateY(150deg) translateZ(15px);
-    box-shadow: 0 35px 70px rgba(0, 0, 0, 0.3), 25px 0 50px rgba(0, 0, 0, 0.25);
+  25% {
+    transform: rotateY(135deg) translateZ(15px);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3), 15px 0 30px rgba(0, 0, 0, 0.2);
   }
-  40% {
-    transform: rotateY(120deg) translateZ(25px);
-    box-shadow: 0 45px 90px rgba(0, 0, 0, 0.4), 40px 0 70px rgba(0, 0, 0, 0.3);
+  50% {
+    transform: rotateY(90deg) translateZ(20px);
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4), 25px 0 40px rgba(0, 0, 0, 0.25);
   }
-  60% {
-    transform: rotateY(90deg) translateZ(30px);
-    box-shadow: 0 50px 100px rgba(0, 0, 0, 0.5), 50px 0 80px rgba(0, 0, 0, 0.35);
-  }
-  80% {
-    transform: rotateY(60deg) translateZ(20px);
-    box-shadow: 0 40px 80px rgba(0, 0, 0, 0.4), 35px 0 60px rgba(0, 0, 0, 0.3);
+  75% {
+    transform: rotateY(45deg) translateZ(15px);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3), 15px 0 30px rgba(0, 0, 0, 0.2);
   }
   100% {
     transform: rotateY(0deg) translateZ(0px);
+    box-shadow: 0 18px 40px var(--shadow);
+  }
+}
+@keyframes flipLeftPage {
+  0% {
+    transform: rotateY(0deg) translateZ(0px);
+    box-shadow: 0 18px 40px var(--shadow);
+  }
+  25% {
+    transform: rotateY(45deg) translateZ(15px);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3), 15px 0 30px rgba(0, 0, 0, 0.2);
+  }
+  50% {
+    transform: rotateY(90deg) translateZ(20px);
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4), 25px 0 40px rgba(0, 0, 0, 0.25);
+  }
+  75% {
+    transform: rotateY(135deg) translateZ(15px);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3), 15px 0 30px rgba(0, 0, 0, 0.2);
+  }
+  100% {
+    transform: rotateY(180deg) translateZ(0px);
     box-shadow: 0 18px 40px var(--shadow);
   }
 }
@@ -336,5 +356,172 @@ body {
   .turn.next,
   .turn.prev {
     animation-duration: 0.2s;
+  }
+}
+
+/* Photo grid styles */
+.photo-grid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 10px;
+  padding: 20px;
+  z-index: 1;
+}
+
+.photo-item {
+  position: relative;
+  background: #ff0000; /* Red background to make border visible */
+  border-radius: 8px;
+  padding: 12px 12px 32px 12px; /* White border with thicker bottom */
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15), 0 4px 10px rgba(0, 0, 0, 0.1);
+  transform: rotate(var(--rotation, 0deg));
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  aspect-ratio: 3/4; /* Polaroid aspect ratio */
+}
+
+.photo-item:hover {
+  transform: rotate(var(--rotation, 0deg)) scale(1.02);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2), 0 6px 15px rgba(0, 0, 0, 0.15);
+}
+
+.photo-image {
+  object-fit: cover;
+  object-position: center;
+  filter: brightness(0.95) contrast(1.05);
+  border-radius: 4px;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Add random rotation to each photo for authentic Polaroid look */
+.photo-item:nth-child(1) {
+  --rotation: -2deg;
+}
+.photo-item:nth-child(2) {
+  --rotation: 1deg;
+}
+.photo-item:nth-child(3) {
+  --rotation: -1deg;
+}
+.photo-item:nth-child(4) {
+  --rotation: 2deg;
+}
+.photo-item:nth-child(5) {
+  --rotation: -1.5deg;
+}
+.photo-item:nth-child(6) {
+  --rotation: 1.5deg;
+}
+.photo-item:nth-child(7) {
+  --rotation: -0.5deg;
+}
+.photo-item:nth-child(8) {
+  --rotation: 2.5deg;
+}
+
+/* Single photo layout */
+.photo-grid:has(.photo-item:only-child) {
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+}
+
+/* Two photos layout */
+.photo-grid:has(.photo-item:nth-child(2):last-child) {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr;
+}
+
+/* Three photos layout */
+.photo-grid:has(.photo-item:nth-child(3):last-child) {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+
+.photo-grid:has(.photo-item:nth-child(3):last-child) .photo-item:first-child {
+  grid-column: 1 / -1;
+}
+
+/* Text layer styles */
+.text-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  pointer-events: none;
+}
+
+.text-column {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  padding: 40px 30px;
+  font-family: "Georgia", "Times New Roman", serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #2c1810;
+  text-align: justify;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 250, 243, 0.95) 0%,
+    rgba(255, 250, 243, 0.9) 20%,
+    rgba(255, 250, 243, 0.85) 40%,
+    rgba(255, 250, 243, 0.8) 60%,
+    rgba(255, 250, 243, 0.9) 80%,
+    rgba(255, 250, 243, 0.95) 100%
+  );
+  backdrop-filter: blur(1px);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.left-column {
+  left: 0;
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.right-column {
+  right: 0;
+  border-left: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Gutter shadow effect */
+.text-layer::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  transform: translateX(-50%);
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(0, 0, 0, 0.1) 20%,
+    rgba(0, 0, 0, 0.2) 50%,
+    rgba(0, 0, 0, 0.1) 80%,
+    transparent 100%
+  );
+  box-shadow: -1px 0 3px rgba(0, 0, 0, 0.1), 1px 0 3px rgba(0, 0, 0, 0.1);
+  z-index: 3;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .text-column {
+    font-size: 14px;
+    padding: 30px 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .text-column {
+    font-size: 12px;
+    padding: 20px 15px;
   }
 }
