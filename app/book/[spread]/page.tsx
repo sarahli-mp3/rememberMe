@@ -243,7 +243,8 @@ export default function Spread() {
                       <Image
                         src={photoUrl}
                         alt={`${spreadData.title} - Photo ${photoIndex + 1}`}
-                        fill
+                        width={120}
+                        height={160}
                         className="photo-image"
                         priority={photoIndex === 0}
                         loading={photoIndex === 0 ? "eager" : "lazy"}
@@ -269,7 +270,8 @@ export default function Spread() {
                           photoIndex +
                           1
                         }`}
-                        fill
+                        width={120}
+                        height={160}
                         className="photo-image"
                         loading="lazy"
                       />

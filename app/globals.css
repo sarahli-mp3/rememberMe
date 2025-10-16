@@ -366,20 +366,22 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr 1fr;
-  gap: 10px;
-  padding: 20px;
+  gap: 8px;
+  padding: 15px 15px 15px 25px; /* More padding on left side */
   z-index: 1;
+  box-sizing: border-box;
 }
 
 .photo-item {
   position: relative;
-  background: #ff0000; /* Red background to make border visible */
-  border-radius: 8px;
-  padding: 12px 12px 32px 12px; /* White border with thicker bottom */
+  background: white; /* White Polaroid border */
+  border-radius: 0; /* Sharp corners like real Polaroids */
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15), 0 4px 10px rgba(0, 0, 0, 0.1);
   transform: rotate(var(--rotation, 0deg));
   transition: transform 0.2s ease, box-shadow 0.2s ease;
-  aspect-ratio: 3/4; /* Polaroid aspect ratio */
+  padding: 8px 8px 50px 8px; /* Green border with slightly shorter bottom */
+  max-width: 140px; /* Slightly bigger overall size */
+  max-height: 210px; /* Taller to accommodate longer bottom border */
 }
 
 .photo-item:hover {
@@ -391,10 +393,11 @@ body {
   object-fit: cover;
   object-position: center;
   filter: brightness(0.95) contrast(1.05);
-  border-radius: 4px;
-  width: 100%;
-  height: 100%;
+  border-radius: 0; /* Sharp corners to match Polaroid */
   display: block;
+  aspect-ratio: 3/4; /* 3:4 aspect ratio for the actual image */
+  width: 100%;
+  height: auto; /* Let aspect-ratio control the height */
 }
 
 /* Add random rotation to each photo for authentic Polaroid look */
