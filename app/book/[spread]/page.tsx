@@ -56,21 +56,21 @@ export default function Spread() {
     if (target !== idx) {
       console.log(`Navigating from ${idx} to ${target}, delta: ${delta}`);
 
-      // Trigger animation immediately
-      const dir = delta > 0 ? "next" : "prev";
-      console.log(`Triggering animation: ${dir}`);
-      setAnim(dir as any);
+      // Animation disabled for now
+      // const dir = delta > 0 ? "next" : "prev";
+      // console.log(`Triggering animation: ${dir}`);
+      // setAnim(dir as any);
 
-      // Clear any existing timeout
-      if (animTimeoutRef.current) {
-        clearTimeout(animTimeoutRef.current);
-      }
+      // // Clear any existing timeout
+      // if (animTimeoutRef.current) {
+      //   clearTimeout(animTimeoutRef.current);
+      // }
 
-      animTimeoutRef.current = setTimeout(() => {
-        console.log("Animation completed, setting to none");
-        setAnim("none");
-        animTimeoutRef.current = null;
-      }, 1200);
+      // animTimeoutRef.current = setTimeout(() => {
+      //   console.log("Animation completed, setting to none");
+      //   setAnim("none");
+      //   animTimeoutRef.current = null;
+      // }, 1200);
 
       router.push(`/book/${target}`);
     }
@@ -117,22 +117,20 @@ export default function Spread() {
 
   const pageContent = [
     {
-      left: "Chapter One",
-      right:
-        "The beginning of our story unfolds with gentle curiosity and wonder.",
+      left: "Page 1",
+      right: "Japan 🇯🇵",
     },
     {
-      left: "Chapter Two",
-      right:
-        "As we journey deeper, patterns emerge from the chaos of discovery.",
+      left: "Page 2",
+      right: "Hawaii 🌺",
     },
     {
-      left: "Chapter Three",
-      right: "The middle path reveals its secrets slowly, like dawn breaking.",
+      left: "Page 3",
+      right: "Toronto 🍁",
     },
     {
-      left: "Chapter Four",
-      right: "The final pages hold the culmination of our shared experience.",
+      left: "Page 4",
+      right: "San Diego 🌴",
     },
   ];
 
@@ -174,18 +172,6 @@ export default function Spread() {
             </div>
           )}
         </section>
-      </div>
-      <div className="hint">
-        Tap right to go forward. Tap left to go back. Arrow keys work.
-      </div>
-      <div style={{ marginTop: "20px", display: "flex", gap: "10px" }}>
-        <button onClick={() => go(-1)} style={{ padding: "10px" }}>
-          ← Previous
-        </button>
-        <span style={{ padding: "10px" }}>Page {idx + 1}</span>
-        <button onClick={() => go(1)} style={{ padding: "10px" }}>
-          Next →
-        </button>
       </div>
     </main>
   );
