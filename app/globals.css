@@ -366,10 +366,12 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr 1fr;
-  gap: 8px;
-  padding: 15px 15px 15px 25px; /* More padding on left side */
+  gap: clamp(2px, 0.8vw, 8px); /* More aggressive gap reduction */
+  padding: clamp(8px, 1.5vw, 15px) clamp(8px, 1.5vw, 15px)
+    clamp(8px, 1.5vw, 15px) clamp(15px, 2.5vw, 25px); /* More aggressive padding reduction */
   z-index: 1;
   box-sizing: border-box;
+  place-items: center; /* Center the polaroids in their grid cells */
 }
 
 .photo-item {
@@ -382,6 +384,11 @@ body {
   padding: 8px 8px 50px 8px; /* Green border with slightly shorter bottom */
   max-width: 140px; /* Slightly bigger overall size */
   max-height: 210px; /* Taller to accommodate longer bottom border */
+  width: min(140px, 12vw); /* Much more aggressive scaling */
+  height: min(210px, 18vw); /* Much more aggressive scaling */
+  aspect-ratio: 2/3; /* Maintain polaroid aspect ratio */
+  display: flex;
+  flex-direction: column;
 }
 
 .photo-item:hover {
@@ -398,6 +405,43 @@ body {
   aspect-ratio: 3/4; /* 3:4 aspect ratio for the actual image */
   width: 100%;
   height: auto; /* Let aspect-ratio control the height */
+  flex: 1; /* Take up available space in flex container */
+}
+
+.photo-caption {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  right: 8px;
+  font-family: var(--font-gochi-hand), var(--font-architects-daughter),
+    var(--font-amatic-sc), var(--font-shadows-into-light), var(--font-kalam),
+    cursive;
+  font-size: clamp(
+    4px,
+    0.8vw,
+    8px
+  ); /* More aggressive responsive font size to always fit on one line */
+  line-height: 1.1;
+  color: #2c2c2c;
+  text-align: center;
+  padding: 2px 4px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 1px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  max-height: 26px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 1; /* Force single line */
+  line-clamp: 1; /* Standard property for compatibility */
+  -webkit-box-orient: vertical;
+  word-wrap: break-word;
+  hyphens: auto;
+  font-weight: 400;
+  letter-spacing: 0.5px;
+  transform: rotate(-1deg);
+  text-shadow: 0 0.5px 1px rgba(0, 0, 0, 0.1);
+  white-space: nowrap; /* Ensure single line */
+  text-overflow: ellipsis; /* Add ellipsis for overflow */
 }
 
 /* Add random rotation to each photo for authentic Polaroid look */
@@ -514,11 +558,68 @@ body {
   z-index: 3;
 }
 
+/* Page tab styles */
+.page-tab {
+  position: absolute;
+  top: calc(
+    4% - 50px
+  ); /* Bottom edge aligns with notebook top edge, base position moved up more */
+  left: 20px; /* Move right 20px from 0% */
+  z-index: 10;
+  background: rgba(255, 0, 0, 0.5); /* Red with 50% opacity */
+  border-radius: 8px 8px 0 0;
+  padding: 8px 16px 8px 20px; /* Extra padding on left for the tab effect */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transform: rotate(-2deg); /* Slight rotation */
+  max-width: 200px;
+  overflow: hidden;
+}
+
+.tab-label {
+  color: white;
+  font-family: "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  line-height: 1.2;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .text-column {
     font-size: 14px;
     padding: 30px 20px;
+  }
+
+  .page-tab {
+    top: calc(
+      4% - 35px
+    ); /* Bottom edge aligns with notebook top edge on tablets, moved up more */
+    left: 20px; /* Move right 20px */
+    transform: rotate(-2deg);
+    padding: 6px 12px 6px 16px;
+    max-width: 150px;
+  }
+
+  .tab-label {
+    font-size: 11px;
+  }
+
+  /* Adjust polaroid sizing for tablets */
+  .photo-item {
+    width: min(100px, 15vw);
+    height: min(150px, 22.5vw);
+    max-width: 100px;
+    max-height: 150px;
+    padding: 6px 6px 40px 6px;
+  }
+
+  .photo-caption {
+    font-size: clamp(3px, 1vw, 7px);
   }
 }
 
@@ -526,5 +627,206 @@ body {
   .text-column {
     font-size: 12px;
     padding: 20px 15px;
+  }
+
+  .page-tab {
+    top: calc(
+      4% - 32px
+    ); /* Bottom edge aligns with notebook top edge on mobile, moved up more */
+    left: 20px; /* Move right 20px */
+    transform: rotate(-2deg);
+    padding: 5px 10px 5px 14px;
+    max-width: 120px;
+  }
+
+  .tab-label {
+    font-size: 10px;
+  }
+
+  /* Adjust polaroid sizing for mobile */
+  .photo-item {
+    width: min(80px, 18vw);
+    height: min(120px, 27vw);
+    max-width: 80px;
+    max-height: 120px;
+    padding: 4px 4px 30px 4px; /* Much smaller padding */
+  }
+
+  .photo-caption {
+    font-size: clamp(2px, 1.2vw, 6px);
+    bottom: 6px;
+    left: 6px;
+    right: 6px;
+    max-height: 20px;
+  }
+}
+
+/* Extra narrow screens (very small phones, landscape mode) */
+@media (max-width: 360px) {
+  .photo-item {
+    width: min(70px, 16vw);
+    height: min(105px, 24vw);
+    max-width: 70px;
+    max-height: 105px;
+    padding: 3px 3px 25px 3px;
+  }
+
+  .photo-caption {
+    font-size: clamp(2px, 1.4vw, 5px);
+    bottom: 4px;
+    left: 4px;
+    right: 4px;
+    max-height: 18px;
+  }
+
+  .photo-grid {
+    gap: clamp(2px, 0.8vw, 6px);
+    padding: clamp(8px, 1.5vw, 12px) clamp(8px, 1.5vw, 12px)
+      clamp(8px, 1.5vw, 12px) clamp(15px, 2.5vw, 20px);
+  }
+
+  .page-tab {
+    top: calc(
+      4% - 29px
+    ); /* Bottom edge aligns with notebook top edge on extra narrow screens, moved up more */
+    left: 15px; /* Slightly adjust left position */
+    padding: 4px 8px 4px 12px;
+    max-width: 100px;
+  }
+
+  .tab-label {
+    font-size: 9px;
+  }
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  position: relative;
+  max-width: min(90vw, 400px);
+  max-height: min(90vh, 600px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.polaroid-modal {
+  position: relative;
+  width: min(300px, 80vw);
+  height: min(400px, 80vh);
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.polaroid-modal.flipped {
+  transform: rotateY(180deg);
+}
+
+.polaroid-front,
+.polaroid-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  background: white;
+  border-radius: 0;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2), 0 8px 20px rgba(0, 0, 0, 0.15);
+  padding: 12px 12px 60px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.polaroid-back {
+  transform: rotateY(180deg);
+  background: linear-gradient(135deg, #fff7ea, #fff2dd);
+}
+
+.modal-photo-image {
+  object-fit: cover;
+  object-position: center;
+  filter: brightness(0.95) contrast(1.05);
+  border-radius: 0;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 3/4;
+  flex: 1;
+}
+
+.polaroid-back-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.modal-caption {
+  font-family: var(--font-gochi-hand), var(--font-architects-daughter),
+    var(--font-amatic-sc), var(--font-shadows-into-light), var(--font-kalam),
+    cursive;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #2c2c2c;
+  text-align: center;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  max-width: 100%;
+  word-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  font-weight: 400;
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+/* Responsive modal adjustments */
+@media (max-width: 768px) {
+  .modal-content {
+    max-width: 95vw;
+    max-height: 95vh;
+  }
+
+  .polaroid-modal {
+    width: min(250px, 85vw);
+    height: min(350px, 85vh);
+  }
+
+  .modal-caption {
+    font-size: 12px;
+    padding: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .polaroid-modal {
+    width: min(200px, 90vw);
+    height: min(300px, 90vh);
+  }
+
+  .modal-caption {
+    font-size: 10px;
+    padding: 12px;
   }
 }

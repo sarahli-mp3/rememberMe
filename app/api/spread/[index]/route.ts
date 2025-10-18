@@ -5,12 +5,18 @@ const notion = new Client({
   auth: process.env.NOTION_TOKEN,
 });
 
+interface PhotoWithCaption {
+  url: string;
+  caption?: string;
+}
+
 interface SpreadData {
   id: string;
   title: string;
   text: string;
   photo: string | null;
   photos: string[];
+  photosWithCaptions: PhotoWithCaption[];
 }
 
 // Placeholder data for when Notion is not configured
@@ -21,6 +27,7 @@ const PLACEHOLDER_SPREADS: SpreadData[] = [
     text: "This is a placeholder spread. To use real Notion pages, set NOTION_TOKEN and NOTION_PAGE_IDS in your environment variables.\n\nEach spread represents one Notion page, with the hero image spanning both pages and text flowing across the spread.",
     photo: null,
     photos: [],
+    photosWithCaptions: [],
   },
   {
     id: "placeholder-1",
@@ -28,6 +35,7 @@ const PLACEHOLDER_SPREADS: SpreadData[] = [
     text: "Capture your favorite travel moments in this digital book. Each page can contain rich content from your Notion workspace.\n\nImages will span the full spread, creating an immersive reading experience.",
     photo: null,
     photos: [],
+    photosWithCaptions: [],
   },
   {
     id: "placeholder-2",
@@ -35,6 +43,7 @@ const PLACEHOLDER_SPREADS: SpreadData[] = [
     text: "Document your creative journey with photos and stories. The book format makes it feel like a real photo album or scrapbook.\n\nNavigate with arrow keys, touch gestures, or click the edges of the pages.",
     photo: null,
     photos: [],
+    photosWithCaptions: [],
   },
   {
     id: "placeholder-3",
@@ -42,11 +51,12 @@ const PLACEHOLDER_SPREADS: SpreadData[] = [
     text: "Share your personal stories and memories. The two-page spread format allows for rich visual storytelling.\n\nSet up your Notion integration to see your real content here.",
     photo: null,
     photos: [],
+    photosWithCaptions: [],
   },
 ];
 
 function extractTextFromBlock(block: any): string {
-  if (!block) return "";
+  if (!block || !("type" in block)) return "";
 
   // Handle different block types
   const blockTypes = [
@@ -102,7 +112,7 @@ function extractTextFromBlock(block: any): string {
 function findAllImageUrls(blocks: any[]): string[] {
   const images: string[] = [];
   for (const block of blocks) {
-    if (block.type === "image") {
+    if ("type" in block && block.type === "image") {
       if (block.image?.external?.url) {
         images.push(block.image.external.url);
       }
@@ -112,6 +122,50 @@ function findAllImageUrls(blocks: any[]): string[] {
     }
   }
   return images;
+}
+
+function findImagesWithCaptions(blocks: any[]): PhotoWithCaption[] {
+  const photosWithCaptions: PhotoWithCaption[] = [];
+
+  for (let i = 0; i < blocks.length; i++) {
+    const block = blocks[i];
+
+    if ("type" in block && block.type === "image") {
+      let imageUrl = "";
+      if (block.image?.external?.url) {
+        imageUrl = block.image.external.url;
+      } else if (block.image?.file?.url) {
+        imageUrl = block.image.file.url;
+      }
+
+      if (imageUrl) {
+        // Look for text in the next block(s) that could be a caption
+        let caption = "";
+
+        // Check the next block for text content
+        if (i + 1 < blocks.length) {
+          const nextBlock = blocks[i + 1];
+          const nextBlockText = extractTextFromBlock(nextBlock);
+
+          // If the next block is a paragraph with text, consider it a caption
+          if (
+            nextBlockText &&
+            nextBlockText.trim().length > 0 &&
+            nextBlockText.trim().length < 200
+          ) {
+            caption = nextBlockText.trim();
+          }
+        }
+
+        photosWithCaptions.push({
+          url: imageUrl,
+          caption: caption || undefined,
+        });
+      }
+    }
+  }
+
+  return photosWithCaptions;
 }
 
 export async function GET(
@@ -153,7 +207,7 @@ export async function GET(
     const response = NextResponse.json(PLACEHOLDER_SPREADS[index]);
     response.headers.set(
       "Cache-Control",
-      "s-maxage=120, stale-while-revalidate=300"
+      "public, s-maxage=300, stale-while-revalidate=600, max-age=180"
     );
     return response;
   }
@@ -211,7 +265,11 @@ export async function GET(
 
     // Debug: log block types
     blocks.forEach((block, index) => {
-      console.log(`Block ${index}:`, block.type, block);
+      if ("type" in block) {
+        console.log(`Block ${index}:`, block.type, block);
+      } else {
+        console.log(`Block ${index}:`, "partial block", block);
+      }
     });
 
     // Extract text content
@@ -238,6 +296,7 @@ export async function GET(
 
     // Find all images
     const photos = findAllImageUrls(blocks);
+    const photosWithCaptions = findImagesWithCaptions(blocks);
     const photo = photos.length > 0 ? photos[0] : null; // Keep first image as hero
 
     const spreadData: SpreadData = {
@@ -246,12 +305,13 @@ export async function GET(
       text: text.trim(),
       photo,
       photos,
+      photosWithCaptions,
     };
 
     const response = NextResponse.json(spreadData);
     response.headers.set(
       "Cache-Control",
-      "public, s-maxage=3600, stale-while-revalidate=86400, max-age=1800"
+      "public, s-maxage=300, stale-while-revalidate=600, max-age=180"
     );
     return response;
   } catch (error) {
@@ -261,7 +321,7 @@ export async function GET(
       const response = NextResponse.json(PLACEHOLDER_SPREADS[index]);
       response.headers.set(
         "Cache-Control",
-        "public, s-maxage=3600, stale-while-revalidate=86400, max-age=1800"
+        "public, s-maxage=300, stale-while-revalidate=600, max-age=180"
       );
       return response;
     }

@@ -3,12 +3,18 @@ import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 
+interface PhotoWithCaption {
+  url: string;
+  caption?: string;
+}
+
 interface SpreadData {
   id: string;
   title: string;
   text: string;
   photo: string | null;
   photos: string[];
+  photosWithCaptions: PhotoWithCaption[];
 }
 
 interface SpreadMeta {
@@ -25,21 +31,97 @@ export default function Spread() {
   const [preloadedImages, setPreloadedImages] = useState<Set<string>>(
     new Set()
   );
+  const [cachedImages, setCachedImages] = useState<Set<string>>(new Set());
+  const [selectedPhoto, setSelectedPhoto] = useState<PhotoWithCaption | null>(
+    null
+  );
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isFlipped, setIsFlipped] = useState(false);
 
-  // Function to preload images
-  const preloadImages = useCallback(
-    (imageUrls: string[]) => {
-      imageUrls.forEach((url) => {
-        if (!preloadedImages.has(url)) {
-          const img = new Image();
-          img.onload = () => {
-            setPreloadedImages((prev) => new Set([...prev, url]));
-          };
-          img.src = url;
+  // Function to check if image is already cached
+  const isImageCached = useCallback((url: string): Promise<boolean> => {
+    return new Promise((resolve) => {
+      const img = new window.Image();
+      // Use a very short timeout to detect cached images quickly
+      const timeout = setTimeout(() => resolve(false), 5);
+      img.onload = () => {
+        clearTimeout(timeout);
+        resolve(true);
+      };
+      img.onerror = () => {
+        clearTimeout(timeout);
+        resolve(false);
+      };
+      img.src = url;
+    });
+  }, []);
+
+  // Function to immediately check cache for all images in spread data
+  const checkImageCacheImmediately = useCallback(
+    async (photos: PhotoWithCaption[]) => {
+      const imageUrls = photos.map((photo) => photo.url);
+      const cachedUrls: string[] = [];
+
+      // Check all images in parallel for immediate cache detection
+      const cacheChecks = imageUrls.map(async (url) => {
+        if (cachedImages.has(url)) {
+          cachedUrls.push(url);
+          return url;
         }
+        const cached = await isImageCached(url);
+        if (cached) {
+          cachedUrls.push(url);
+          setCachedImages((prev) => new Set(Array.from(prev).concat(url)));
+        }
+        return cached ? url : null;
+      });
+
+      await Promise.all(cacheChecks);
+
+      // Mark all cached images as preloaded immediately
+      if (cachedUrls.length > 0) {
+        setPreloadedImages(
+          (prev) => new Set(Array.from(prev).concat(cachedUrls))
+        );
+      }
+    },
+    [cachedImages, isImageCached]
+  );
+
+  // Function to preload images with cache detection
+  const preloadImages = useCallback(
+    async (imageUrls: string[]) => {
+      const uncachedUrls: string[] = [];
+
+      // Check which images are already cached
+      for (const url of imageUrls) {
+        if (!preloadedImages.has(url) && !cachedImages.has(url)) {
+          const cached = await isImageCached(url);
+          if (cached) {
+            setCachedImages((prev) => new Set(Array.from(prev).concat(url)));
+            setPreloadedImages((prev) => new Set(Array.from(prev).concat(url)));
+          } else {
+            uncachedUrls.push(url);
+          }
+        } else if (cachedImages.has(url)) {
+          // Already know it's cached, just mark as preloaded
+          setPreloadedImages((prev) => new Set(Array.from(prev).concat(url)));
+        }
+      }
+
+      // Only preload uncached images
+      uncachedUrls.forEach((url) => {
+        const img = new window.Image();
+        img.onload = () => {
+          setPreloadedImages((prev) => new Set(Array.from(prev).concat(url)));
+        };
+        img.onerror = () => {
+          console.warn("Failed to preload image:", url);
+        };
+        img.src = url;
       });
     },
-    [preloadedImages]
+    [preloadedImages, cachedImages, isImageCached]
   );
 
   const idx = Math.max(
@@ -56,7 +138,7 @@ export default function Spread() {
     const fetchMeta = async () => {
       try {
         const response = await fetch("/api/spread/meta", {
-          cache: "force-cache", // Use browser cache
+          cache: "default", // Use default browser caching
         });
         if (response.ok) {
           const meta: SpreadMeta = await response.json();
@@ -72,18 +154,25 @@ export default function Spread() {
   // Fetch current spread data
   useEffect(() => {
     const fetchSpread = async () => {
-      setLoading(true);
+      // Only show loading if we don't have data yet
+      if (!spreadData) {
+        setLoading(true);
+      }
+
       try {
         const response = await fetch(`/api/spread/${idx}`, {
-          cache: "force-cache", // Use browser cache
+          cache: "default", // Use default browser caching
         });
         if (response.ok) {
           const data: SpreadData = await response.json();
           setSpreadData(data);
 
-          // Preload all images for this spread
-          if (data.photos && data.photos.length > 0) {
-            preloadImages(data.photos);
+          // Immediately check for cached images and preload others
+          if (data.photosWithCaptions && data.photosWithCaptions.length > 0) {
+            // First, immediately check cache for instant display
+            checkImageCacheImmediately(data.photosWithCaptions);
+            // Then preload any uncached images
+            preloadImages(data.photosWithCaptions.map((photo) => photo.url));
           }
 
           setLoading(false);
@@ -98,7 +187,7 @@ export default function Spread() {
     };
 
     fetchSpread();
-  }, [idx, preloadImages]);
+  }, [idx, preloadImages, spreadData]);
 
   // Preload next spread
   useEffect(() => {
@@ -106,15 +195,16 @@ export default function Spread() {
       const preloadNext = async () => {
         try {
           const response = await fetch(`/api/spread/${idx + 1}`, {
-            cache: "force-cache", // Use browser cache
+            cache: "default", // Use default browser caching
           });
           if (response.ok) {
             const data: SpreadData = await response.json();
             setNextSpreadData(data);
 
             // Preload images for next spread
-            if (data.photos && data.photos.length > 0) {
-              preloadImages(data.photos);
+            if (data.photosWithCaptions && data.photosWithCaptions.length > 0) {
+              checkImageCacheImmediately(data.photosWithCaptions);
+              preloadImages(data.photosWithCaptions.map((photo) => photo.url));
             }
           }
         } catch (error) {
@@ -212,6 +302,30 @@ export default function Spread() {
     }
   };
 
+  const handlePhotoClick = (photo: PhotoWithCaption, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent page navigation
+    setSelectedPhoto(photo);
+    setIsModalOpen(true);
+    setIsFlipped(false);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedPhoto(null);
+    setIsFlipped(false);
+  };
+
+  const handleFlip = () => {
+    setIsFlipped(!isFlipped);
+  };
+
+  // Function to limit text to 2 words max
+  const truncateText = (text: string, maxWords: number = 2) => {
+    const words = text.split(" ");
+    if (words.length <= maxWords) return text;
+    return words.slice(0, maxWords).join(" ") + "...";
+  };
+
   const bgSheets = useMemo(() => Array.from({ length: 16 }), []);
 
   return (
@@ -232,53 +346,100 @@ export default function Spread() {
           />
         ))}
         <section className="spread">
+          {/* Tab with Notion page title - positioned outside page container */}
+          {spreadData?.title && (
+            <div className="page-tab">
+              <span className="tab-label">{spreadData.title}</span>
+            </div>
+          )}
+
           <div className="page left blank" aria-label={`Spread ${idx} left`}>
             {/* Photo grid on left page */}
-            {spreadData?.photos && spreadData.photos.length > 0 && (
-              <div className="photo-grid">
-                {spreadData.photos
-                  .slice(0, Math.ceil(spreadData.photos.length / 2))
-                  .map((photoUrl, photoIndex) => (
-                    <div key={photoIndex} className="photo-item">
-                      <Image
-                        src={photoUrl}
-                        alt={`${spreadData.title} - Photo ${photoIndex + 1}`}
-                        width={120}
-                        height={160}
-                        className="photo-image"
-                        priority={photoIndex === 0}
-                        loading={photoIndex === 0 ? "eager" : "lazy"}
-                      />
-                    </div>
-                  ))}
-              </div>
-            )}
+            {spreadData?.photosWithCaptions &&
+              spreadData.photosWithCaptions.length > 0 && (
+                <div className="photo-grid">
+                  {spreadData.photosWithCaptions
+                    .slice(
+                      0,
+                      Math.ceil(spreadData.photosWithCaptions.length / 2)
+                    )
+                    .map((photo, photoIndex) => (
+                      <div
+                        key={photoIndex}
+                        className="photo-item"
+                        onClick={(e) => handlePhotoClick(photo, e)}
+                        style={{ cursor: "pointer" }}
+                      >
+                        <Image
+                          src={photo.url}
+                          alt={`${spreadData.title} - Photo ${photoIndex + 1}`}
+                          width={120}
+                          height={160}
+                          className="photo-image"
+                          priority={photoIndex === 0}
+                          {...(photoIndex === 0
+                            ? {}
+                            : {
+                                loading:
+                                  cachedImages.has(photo.url) ||
+                                  preloadedImages.has(photo.url)
+                                    ? "eager"
+                                    : "lazy",
+                              })}
+                        />
+                        {photo.caption && (
+                          <div className="photo-caption">
+                            {truncateText(photo.caption, 2)}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                </div>
+              )}
           </div>
 
           <div className="page right blank" aria-label={`Spread ${idx} right`}>
             {/* Photo grid on right page */}
-            {spreadData?.photos && spreadData.photos.length > 1 && (
-              <div className="photo-grid">
-                {spreadData.photos
-                  .slice(Math.ceil(spreadData.photos.length / 2))
-                  .map((photoUrl, photoIndex) => (
-                    <div key={photoIndex} className="photo-item">
-                      <Image
-                        src={photoUrl}
-                        alt={`${spreadData.title} - Photo ${
-                          Math.ceil(spreadData.photos.length / 2) +
-                          photoIndex +
-                          1
-                        }`}
-                        width={120}
-                        height={160}
-                        className="photo-image"
-                        loading="lazy"
-                      />
-                    </div>
-                  ))}
-              </div>
-            )}
+            {spreadData?.photosWithCaptions &&
+              spreadData.photosWithCaptions.length > 1 && (
+                <div className="photo-grid">
+                  {spreadData.photosWithCaptions
+                    .slice(Math.ceil(spreadData.photosWithCaptions.length / 2))
+                    .map((photo, photoIndex) => (
+                      <div
+                        key={photoIndex}
+                        className="photo-item"
+                        onClick={(e) => handlePhotoClick(photo, e)}
+                        style={{ cursor: "pointer" }}
+                      >
+                        <Image
+                          src={photo.url}
+                          alt={`${spreadData.title} - Photo ${
+                            Math.ceil(
+                              spreadData.photosWithCaptions.length / 2
+                            ) +
+                            photoIndex +
+                            1
+                          }`}
+                          width={120}
+                          height={160}
+                          className="photo-image"
+                          loading={
+                            cachedImages.has(photo.url) ||
+                            preloadedImages.has(photo.url)
+                              ? "eager"
+                              : "lazy"
+                          }
+                        />
+                        {photo.caption && (
+                          <div className="photo-caption">
+                            {truncateText(photo.caption, 2)}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                </div>
+              )}
           </div>
           {anim === "next" && (
             <div className="turn turn-next" style={{ right: 0, left: "auto" }}>
@@ -349,6 +510,40 @@ export default function Spread() {
           </div>
         )}
       </div>
+
+      {/* Polaroid Modal */}
+      {isModalOpen && selectedPhoto && (
+        <div className="modal-overlay" onClick={closeModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div
+              className={`polaroid-modal ${isFlipped ? "flipped" : ""}`}
+              onClick={handleFlip}
+            >
+              {/* Front of polaroid */}
+              <div className="polaroid-front">
+                <Image
+                  src={selectedPhoto.url}
+                  alt={selectedPhoto.caption || "Photo"}
+                  width={300}
+                  height={400}
+                  className="modal-photo-image"
+                  priority
+                  loading="eager"
+                />
+              </div>
+
+              {/* Back of polaroid */}
+              <div className="polaroid-back">
+                <div className="polaroid-back-content">
+                  {selectedPhoto.caption && (
+                    <div className="modal-caption">{selectedPhoto.caption}</div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

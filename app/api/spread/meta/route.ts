@@ -50,7 +50,7 @@ export async function GET() {
     const response = NextResponse.json({ count });
     response.headers.set(
       "Cache-Control",
-      "public, s-maxage=3600, stale-while-revalidate=86400, max-age=1800"
+      "public, s-maxage=300, stale-while-revalidate=600, max-age=180"
     );
     return response;
   } catch (error) {
